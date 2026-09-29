@@ -1,0 +1,260 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Search form",
+        "formDescription": "input your search query to create an audio version of a specific topic to learn.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Topic",
+              "placeholder": "vibe coding"
+            },
+            {
+              "fieldLabel": "time period",
+              "placeholder": "past 6 months"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fec3fa81-7152-46c4-838a-5a376195a096",
+      "name": "On form submission",
+      "webhookId": "3d957857-bb1f-4a54-930e-fc385db0cf61"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a research and learning AI agent.\n\nThe user will provide a topic and a time period.\n\nUser topic:\n{{ $json.Topic }}\n\nUser time period:\n{{ $json['time period'] }}\n\nResearch the topic using the tools available to you and create an accurate, easy-to-understand learning summary.\n\nYour final response will be converted into speech using a text-to-speech service.\n\nTherefore, write the final answer as a natural narration script.\n\nRules for the narration:\n\n* Do not use markdown headings.\n* Do not use bullet points.\n* Do not use tables.\n* Do not use emojis.\n* Do not include unnecessary URLs.\n* Avoid excessive abbreviations.\n* Explain important technical terms briefly.\n* Use natural sentences that sound good when spoken.\n* Use short and medium-length sentences.\n* Use transitions between ideas.\n* Do not say \"here are the key points\" followed by a list.\n* Do not mention that you are an AI.\n* Do not describe your internal reasoning.\n* Focus only on information relevant to the user's topic and requested time period.\n* Clearly distinguish confirmed information from uncertainty.\n* Do not invent facts or sources.\n\nStart directly with an engaging introduction to the topic.\n\nThen explain the most important information in a logical order.\n\nEnd with a short conclusion or takeaway.\n\nReturn ONLY the narration script. Do not include a separate source list, markdown formatting, or explanations outside the narration.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7b05aa8d-3101-406d-b376-0e9f3acd7d69",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview",
+          "cachedResultName": "models/gemini-3-flash-preview",
+          "cachedResultUrl": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Prompt', ``, 'string') }}"
+            }
+          ]
+        },
+        "simplify": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify_Output', ``, 'boolean') }}",
+        "jsonOutput": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Output_Content_as_JSON', ``, 'boolean') }}",
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGeminiTool",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        208
+      ],
+      "id": "96cd0f09-30bd-4837-9f42-e2975a394019",
+      "name": "Message a model in Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "K5ZTOKDeqS4xZJ4b",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "summary"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ],
+      "id": "d03a20b2-9273-4e16-961b-a7010dc41c10",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        208
+      ],
+      "id": "2ce76600-12e2-46c4-bd61-cbef8de7555e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "K5ZTOKDeqS4xZJ4b",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "EXAVITQu4vr4xnSDxMaL",
+          "mode": "list",
+          "cachedResultName": "Sarah - Mature, Reassuring, Confident"
+        },
+        "text": "={{ $json.output }}",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        976,
+        0
+      ],
+      "id": "38b8df07-d6e4-452f-8a82-4e2af85fdccd",
+      "name": "Convert text to speech",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "rOmm1kiQZuhhzQ9u",
+          "name": "ElevenLabs account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "asviniluxci@gmail.com",
+        "subject": "topic summary",
+        "message": "here is the audio file of ur topic!!",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "677abc49-f69e-4724-9122-f906cfbe1e2e",
+      "name": "Send a message",
+      "webhookId": "2c3e4560-ddc2-435e-abea-618e13d082e0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fuO60mTPbN1xhg1t",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Google Gemini": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert text to speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert text to speech": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "availableInMCP": false
+  },
+  "versionId": "b07c4d67-1824-4ecb-b9af-0a0fdd31db1c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f24a24662581237f8f961f86a48fec05f3564c62b34bef19b27a00d27cefb11b"
+  },
+  "nodeGroups": [],
+  "id": "nHa3vvFV9iQoXLrE",
+  "tags": []
+}
